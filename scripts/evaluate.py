@@ -32,7 +32,7 @@ def main(args: argparse.Namespace) -> None:
     logging_utils.configure(args)
     experiment = experiment_utils.setup_experiment(args)
 
-    device = args.device or "cuda" if torch.cuda.is_available() else "cpu"
+    device = models.determine_default_device(args.device)
     mt = models.load_model(args.model, fp16=args.fp16, device=device)
     dataset = data.load_dataset_from_args(args)
 
@@ -106,7 +106,7 @@ if __name__ == "__main__":
     parser.add_argument(
         "--editor",
         choices=EDITORS,
-        default="lr",
+        default="invert-lre",
         help="editor to use",
     )
     parser.add_argument(

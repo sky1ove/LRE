@@ -26,6 +26,8 @@ python -m pip install invoke
 invoke install
 ```
 
+On Apple Silicon / MacBook, use `mps` instead of `cuda` when a notebook or script asks for a device. In this repo's current `uv` setup you can also rely on the CLI auto-detection, which prefers `cuda`, then `mps`, then `cpu`.
+
 ## $\mathbf{LRE}$ Demo
 [demo/demo.ipynb](demo/demo.ipynb) shows how to get $LRE$ approximation for a certain relation. This notebook also explains the setup of our evaluation metrics $faithfulness$ and $causality$.
 

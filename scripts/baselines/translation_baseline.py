@@ -19,7 +19,7 @@ logger = logging.getLogger(__name__)
 
 
 def main(args: argparse.Namespace) -> None:
-    device = args.device or "cuda" if torch.cuda.is_available() else "cpu"
+    device = models.determine_default_device(args.device)
     mt = models.load_model(args.model, fp16=args.fp16, device=device)
     dataset = data.load_dataset()
     baseline_results = load_raw_results(

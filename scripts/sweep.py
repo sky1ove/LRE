@@ -14,7 +14,7 @@ def main(args: argparse.Namespace) -> None:
     logging_utils.configure(args)
     experiment = experiment_utils.setup_experiment(args)
 
-    device = args.device or "cuda" if torch.cuda.is_available() else "cpu"
+    device = models.determine_default_device(args.device)
 
     dataset = data.load_dataset_from_args(args)
     mt = models.load_model(args.model, fp16=args.fp16, device=device)

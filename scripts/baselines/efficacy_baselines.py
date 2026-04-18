@@ -55,7 +55,7 @@ def run_causality_baselines(
     if experiment_name is not None:
         save_dir = f"{save_dir}/{experiment_name}"
     os.makedirs(save_dir, exist_ok=True)
-    device = device or "cuda" if torch.cuda.is_available() else "cpu"
+    device = models.determine_default_device(device)
     mt = models.load_model(name=model_name, device=device)
     sweep_results_dir = f"{sweep_results_dir}/{model_name}"
     sweep_results = read_sweep_results(sweep_results_dir, relation_names=args.rel_names)

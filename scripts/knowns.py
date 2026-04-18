@@ -16,8 +16,8 @@ REMOVED_MARKER = "❌"
 def main(args: argparse.Namespace) -> None:
     logging_utils.configure(args=args)
 
-    device = args.device or "cuda" if torch.cuda.is_available() else "cpu"
-    mt = models.load_model(args.model, fp16=args.fp16, device=args.device)
+    device = models.determine_default_device(args.device)
+    mt = models.load_model(args.model, fp16=args.fp16, device=device)
     dataset = data.load_dataset_from_args(args)
 
     kept_relations = 0

@@ -220,6 +220,17 @@ def determine_dtype(model: ModelAndTokenizer | Model) -> torch.dtype | None:
     return parameter.dtype if parameter is not None else None
 
 
+def determine_default_device(device: Optional[Device] = None) -> Device:
+    """Pick an explicit device or the best available backend."""
+    if device is not None:
+        return device
+    if torch.cuda.is_available():
+        return "cuda"
+    if torch.backends.mps.is_available():
+        return "mps"
+    return "cpu"
+
+
 def any_parameter(model: ModelAndTokenizer | Model) -> torch.nn.Parameter | None:
     """Get any example parameter for the model."""
     model = unwrap_model(model)

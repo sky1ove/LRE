@@ -140,7 +140,7 @@ def main(args: argparse.Namespace) -> None:
     experiment = experiment_utils.setup_experiment(args)
     logger.info(args)
 
-    device = args.device or "cuda" if torch.cuda.is_available() else "cpu"
+    device = models.determine_default_device(args.device)
     mt = models.load_model(args.model, fp16=args.fp16, device=device)
     logger.info(
         f"dtype: {mt.model.dtype}, device: {mt.model.device}, memory: {mt.model.get_memory_footprint()}"

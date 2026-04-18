@@ -15,7 +15,7 @@ def main(args: argparse.Namespace) -> None:
     logging_utils.configure(args)
     experiment = experiment_utils.setup_experiment(args)
 
-    device = args.device or "cuda" if torch.cuda.is_available() else "cpu"
+    device = models.determine_default_device(args.device)
 
     dataset = data.load_dataset().filter(
         relation_names=[args.relation_name]

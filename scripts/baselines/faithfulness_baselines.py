@@ -236,7 +236,7 @@ def get_icl_results(
 
 
 def main(args: argparse.Namespace) -> None:
-    device = args.device or "cuda" if torch.cuda.is_available() else "cpu"
+    device = models.determine_default_device(args.device)
     mt = models.load_model(args.model, fp16=args.fp16, device=device)
 
     save_dir = args.save_dir
