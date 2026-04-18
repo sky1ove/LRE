@@ -4,8 +4,8 @@ dataclasses-json
 # TODO(evan): Needed?
 huggingface-hub
 invoke
-jupyter
-jupyter_http_over_ws
+#jupyter
+#jupyter_http_over_ws
 matplotlib
 numpy
 protobuf==3.20.0
@@ -14,7 +14,7 @@ seaborn
 sentencepiece
 tqdm
 transformers
-torch
+#torch
 plotly
 
 # dev dependencies
