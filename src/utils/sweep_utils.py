@@ -368,6 +368,8 @@ def read_efficacy_baseline_results(sweep_path: PathLike) -> dict:
 
     for relation_folder in os.listdir(sweep_path):
         cur_sweep = f"{sweep_path}/{relation_folder}"
+        if not os.path.isdir(cur_sweep):
+            continue
         if "results_all.json" not in os.listdir(cur_sweep):
             continue
         with open(f"{cur_sweep}/results_all.json") as f:

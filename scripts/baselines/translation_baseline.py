@@ -4,7 +4,9 @@ import logging
 import os
 from typing import Sequence
 
-from scripts.faithfulness_baselines import evaluate, get_h, load_raw_results
+# from scripts.faithfulness_baselines import evaluate, get_h, load_raw_results
+from scripts.baselines.faithfulness_baselines import evaluate, get_h, load_raw_results
+
 from src import data, functional, models
 from src.operators import Word2VecIclEstimator
 from src.utils import experiment_utils, logging_utils, tokenizer_utils

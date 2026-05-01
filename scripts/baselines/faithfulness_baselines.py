@@ -4,6 +4,9 @@ import logging
 import os
 from typing import Sequence
 
+# add this
+from src.hparams import RelationHParams
+
 from src import data, functional, metrics, models
 from src.operators import (
     CornerMeanEmbeddingEstimator,
@@ -244,13 +247,25 @@ def main(args: argparse.Namespace) -> None:
     N_TRIALS = args.n_trials
     N_TRAINING = args.n_training
 
-    sweep_results_dir = f"{args.sweep_results_dir}/{args.model}"
-    sweep_results = read_sweep_results(sweep_results_dir, relation_names=args.rel_names)
+    # sweep_results_dir = f"{args.sweep_results_dir}/{args.model}"
+    # sweep_results = read_sweep_results(sweep_results_dir, relation_names=args.rel_names)
 
-    logger.info("found %d relations", len(sweep_results))
-    logger.info(json.dumps(list(sweep_results.keys()), indent=4))
+    # logger.info("found %d relations", len(sweep_results))
+    # logger.info(json.dumps(list(sweep_results.keys()), indent=4))
+
+    # dataset = data.load_dataset()
 
     dataset = data.load_dataset()
+
+    if args.use_hparams:
+        relation_names = args.rel_names or [r.name for r in dataset.relations]
+        sweep_results = {name: None for name in relation_names}
+    else:
+        sweep_results_dir = f"{args.sweep_results_dir}/{args.model}"
+        sweep_results = read_sweep_results(sweep_results_dir, relation_names=args.rel_names)
+    
+    logger.info("found %d relations", len(sweep_results))
+    logger.info(json.dumps(list(sweep_results.keys()), indent=4))
 
     all_relation_results = {}
 
@@ -273,19 +288,77 @@ def main(args: argparse.Namespace) -> None:
                 logger.info("skipping %s", relation_name)
                 continue
             logger.info("relation: %s", relation_name)
-            if relation_name not in relation_sweeps:
-                relation_sweeps[relation_name] = relation_from_dict(sweep_result)
-            relation_sweep = relation_sweeps[relation_name]
-            if len(relation_sweep.trials) < 3:
-                logger.info(f"skipping {relation_name}, not enough trials")
-                continue
-            hparams = relation_sweep.best_by_faithfulness()
-            logger.info(
-                f"{relation_name} | h_layer: {hparams.layer} | beta: {hparams.beta.mean} +/- {hparams.beta.stderr} |>> expected lre recall: {hparams.recall.mean} +/- {hparams.recall.stderr}"
-            )
-            h_layer = hparams.layer
-            beta = hparams.beta.mean
-            relation = dataset.filter(relation_names=[relation_sweep.relation_name])[0]
+            
+            # if relation_name not in relation_sweeps:
+            #     relation_sweeps[relation_name] = relation_from_dict(sweep_result)
+            # relation_sweep = relation_sweeps[relation_name]
+            # if len(relation_sweep.trials) < 3:
+            #     logger.info(f"skipping {relation_name}, not enough trials")
+            #     continue
+            # hparams = relation_sweep.best_by_faithfulness()
+            # logger.info(
+            #     f"{relation_name} | h_layer: {hparams.layer} | beta: {hparams.beta.mean} +/- {hparams.beta.stderr} |>> expected lre recall: {hparams.recall.mean} +/- {hparams.recall.stderr}"
+            # )
+            # h_layer = hparams.layer
+            # beta = hparams.beta.mean
+            # relation = dataset.filter(relation_names=[relation_sweep.relation_name])[0]
+
+            # if args.use_hparams:
+            #     relation_hparams = RelationHParams.from_relation(args.model, relation_name)
+            #     if relation_hparams is None:
+            #         logger.info(f"skipping {relation_name}, no hparams file")
+            #         continue
+            
+            #     h_layer = relation_hparams.h_layer
+            #     beta = relation_hparams.beta
+            #     relation = dataset.filter(relation_names=[relation_name])[0]
+            
+            #     logger.info(f"{relation_name} | h_layer: {h_layer} | beta: {beta}")
+            # else:
+            #     if relation_name not in relation_sweeps:
+            #         relation_sweeps[relation_name] = relation_from_dict(sweep_result)
+            #     relation_sweep = relation_sweeps[relation_name]
+            #     if len(relation_sweep.trials) < 3:
+            #         logger.info(f"skipping {relation_name}, not enough trials")
+            #         continue
+            
+            #     sweep_hparams = relation_sweep.best_by_faithfulness()
+            #     h_layer = sweep_hparams.layer
+            #     beta = sweep_hparams.beta.mean
+            #     relation = dataset.filter(relation_names=[relation_sweep.relation_name])[0]
+            if args.use_hparams:
+                relation_hparams = RelationHParams.from_relation(args.model, relation_name)
+                if relation_hparams is None:
+                    logger.info(f"skipping {relation_name}, no hparams file")
+                    continue
+            
+                h_layer = relation_hparams.h_layer
+                beta = relation_hparams.beta
+                expected_recall = None
+                relation = dataset.filter(relation_names=[relation_name])[0]
+            
+                logger.info(f"{relation_name} | h_layer: {h_layer} | beta: {beta}")
+            else:
+                if relation_name not in relation_sweeps:
+                    relation_sweeps[relation_name] = relation_from_dict(sweep_result)
+                relation_sweep = relation_sweeps[relation_name]
+            
+                if len(relation_sweep.trials) < 3:
+                    logger.info(f"skipping {relation_name}, not enough trials")
+                    continue
+            
+                sweep_hparams = relation_sweep.best_by_faithfulness()
+                h_layer = sweep_hparams.layer
+                beta = sweep_hparams.beta.mean
+                expected_recall = sweep_hparams.recall.mean
+                relation = dataset.filter(relation_names=[relation_sweep.relation_name])[0]
+            
+                logger.info(
+                    f"{relation_name} | h_layer: {h_layer} | beta: {beta} | "
+                    f"expected lre recall: {sweep_hparams.recall.mean}"
+                )
+
+            
             prompt_template = relation.prompt_templates[0]
             # prompt_template = " {} :"
             relation = relation.set(prompt_templates=[prompt_template])
@@ -301,7 +374,8 @@ def main(args: argparse.Namespace) -> None:
                     "prompt_template": prompt_template,
                     "h_layer": h_layer,
                     "beta": beta,
-                    "expected_recall": hparams.recall.mean,
+                    # "expected_recall": hparams.recall.mean,
+                    "expected_recall": expected_recall,
                     "trials": [],
                 }
             relation_result = all_relation_results[relation_name]
@@ -475,6 +549,13 @@ if __name__ == "__main__":
 
     parser.add_argument(
         "--rel-names", "-r", nargs="+", type=str, help="filter by relation name"
+    )
+    
+    parser.add_argument(
+        "--use-hparams",
+        action="store_true",
+        default=False,
+        help="use committed hparams/<model>/<relation>.json instead of sweep results",
     )
 
     args = parser.parse_args()
